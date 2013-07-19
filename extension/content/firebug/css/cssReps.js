@@ -9,9 +9,10 @@ define([
     "firebug/lib/dom",
     "firebug/lib/css",
     "firebug/lib/string",
+    "firebug/lib/xpcom",
     "firebug/lib/fonts"
 ],
-function(Obj, InfoTip, Domplate, SourceLink, Locale, Dom, Css, Str, Fonts) {
+function(Obj, InfoTip, Domplate, SourceLink, Locale, Dom, Css, Str, Xpcom, Fonts) {
 
 with (Domplate) {
 
@@ -140,7 +141,7 @@ var CSSInfoTip = Obj.extend(InfoTip,
         }
     }),
 
-    populateFontFamilyInfoTip: function(infoTip, fontName)
+    populateFontFamilyInfoTip: function(context, infoTip, fontName)
     {
         var fontStyles = [
            "font-size:12px;",
@@ -150,7 +151,7 @@ var CSSInfoTip = Obj.extend(InfoTip,
            "font-size:18px;"
         ];
 
-        var fontObject = Fonts.getFontInfo(null, null,
+        var fontObject = Fonts.getFontInfo(context, null,
             fontName.replace(/^(["'])?(.*?)\1$/g, "$2"));
 
         if (FBTrace.DBG_INFOTIP)
@@ -163,7 +164,8 @@ var CSSInfoTip = Obj.extend(InfoTip,
             fontObject: fontObject}, infoTip);
         var styleNode = node.getElementsByClassName("infoTipFontFamilyStyle").item(0);
 
-        styleNode.textContent = getFontFaceCSS(fontObject ? fontObject : fontName);
+        var data = fontObject ? context.sourceCache.cache[fontObject.URI] : "";
+        styleNode.textContent = getFontFaceCSS(fontObject ? fontObject : fontName, data);
         return true;
     },
 
@@ -193,16 +195,39 @@ var CSSInfoTip = Obj.extend(InfoTip,
 * @param fontObject: Font related information
 * @return @font-face CSS
 */
-function getFontFaceCSS(font)
+function getFontFaceCSS(font, data)
 {
+    function encodeBase64(string)
+    {
+        var inputStream = Xpcom.CCSV("@mozilla.org/io/string-input-stream;1", "nsIStringInputStream");
+        inputStream.setData(string, string.length);
+        var stream = Xpcom.CCSV("@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream");
+        stream.setInputStream(inputStream);
+        var encoded = btoa(stream.readBytes(stream.available()));
+        return encoded;
+    }
+
     var fontFaceCSS = "";
     var fontName = "";
-
-    if (typeof font == "object")
+    if (typeof font === "object")
     {
-        if (font.rule)
-            fontFaceCSS = font.rule.cssText.replace(/url\(.*?\)/g, "url(" + font.URI + ")");
-        fontName = font.CSSFamilyName;
+        if (font.URI !== "")
+        {
+            var urlString = typeof data === "object" ?
+                "url(data:application/woff;base64," + encodeBase64(data.join("")) + ")" :
+                "url(" + font.URI + ")";
+            if (font.rule)
+            {
+                fontFaceCSS = "@font-face { font-family: infotipfont; src: " + urlString +
+                    " format(\"woff\"); }";
+            }
+
+            fontName = "infotipfont";
+        }
+        else
+        {
+            fontName = font.CSSFamilyName;
+        }
     }
     else
     {
