@@ -331,18 +331,21 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         if (responseText.length > addRawBytes)
             responseText = responseText.substr(responseText.length - addRawBytes);
 
-        try
+        if (request.contentType != "application/octet-stream")
         {
-            responseText = Str.convertToUnicode(responseText, win.document.characterSet);
-        }
-        catch (err)
-        {
-            if (FBTrace.DBG_ERRORS || FBTrace.DBG_CACHE)
-                FBTrace.sysout("tabCache.storePartialResponse EXCEPTION " +
-                    Http.safeGetRequestName(request), err);
+            try
+            {
+                responseText = Str.convertToUnicode(responseText, win.document.characterSet);
+            }
+            catch (err)
+            {
+                if (FBTrace.DBG_ERRORS || FBTrace.DBG_CACHE)
+                    FBTrace.sysout("tabCache.storePartialResponse EXCEPTION " +
+                        Http.safeGetRequestName(request), err);
 
-            // Even responses that are not converted are stored into the cache.
-            // return false;
+                // Even responses that are not converted are stored into the cache.
+                // return false;
+            }
         }
 
         // Size of each response is limited.
