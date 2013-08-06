@@ -10,9 +10,10 @@ define([
     "firebug/lib/css",
     "firebug/lib/string",
     "firebug/lib/xpcom",
-    "firebug/lib/fonts"
+    "firebug/lib/fonts",
+    "firebug/lib/url",
 ],
-function(Obj, InfoTip, Domplate, SourceLink, Locale, Dom, Css, Str, Xpcom, Fonts) {
+function(Obj, InfoTip, Domplate, SourceLink, Locale, Dom, Css, Str, Xpcom, Fonts, Url) {
 
 with (Domplate) {
 
@@ -164,8 +165,13 @@ var CSSInfoTip = Obj.extend(InfoTip,
             fontObject: fontObject}, infoTip);
         var styleNode = node.getElementsByClassName("infoTipFontFamilyStyle").item(0);
 
-        var data = fontObject ? context.sourceCache.cache[fontObject.URI] : "";
+        var data = fontObject ? context.sourceCache.loadRaw(fontObject.URI) : "";
         styleNode.textContent = getFontFaceCSS(fontObject ? fontObject : fontName, data);
+
+        if (FBTrace.DBG_INFOTIP)
+            FBTrace.sysout("populateFontFamilyInfoTip; Font face applied for infotip",
+                styleNode.textContent);
+
         return true;
     },
 
@@ -199,7 +205,8 @@ function getFontFaceCSS(font, data)
 {
     function encodeBase64(string)
     {
-        var inputStream = Xpcom.CCSV("@mozilla.org/io/string-input-stream;1", "nsIStringInputStream");
+        var inputStream = Xpcom.CCSV("@mozilla.org/io/string-input-stream;1",
+            "nsIStringInputStream");
         inputStream.setData(string, string.length);
         var stream = Xpcom.CCSV("@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream");
         stream.setInputStream(inputStream);
@@ -209,17 +216,26 @@ function getFontFaceCSS(font, data)
 
     var fontFaceCSS = "";
     var fontName = "";
+    var fontMime = "";
+    var extension = "";
     if (typeof font === "object")
     {
         if (font.URI !== "")
         {
-            var urlString = typeof data === "object" ?
-                "url(data:application/woff;base64," + encodeBase64(data.join("")) + ")" :
-                "url(" + font.URI + ")";
+            extension = Url.getFileExtension(font.URI);
+            fontMime = Fonts.getMimeForFont(extension);
+
+            if (FBTrace.DBG_INFOTIP)
+                FBTrace.sysout("getFontFaceCSS; Mime for " + font.URI + " is " + fontMime);
+        }
+        if (fontMime)
+        {
+            var urlString = typeof data === "string" ?
+                "url('data:" + fontMime + ";base64," + encodeBase64(data) + "')" :
+                "url('" + font.URI + "')";
             if (font.rule)
             {
-                fontFaceCSS = "@font-face { font-family: infotipfont; src: " + urlString +
-                    " format(\"woff\"); }";
+                fontFaceCSS = "@font-face { font-family: infotipfont; src: " + urlString + ")}";
             }
 
             fontName = "infotipfont";

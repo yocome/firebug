@@ -321,6 +321,7 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
 
         var url = Http.safeGetRequestName(request);
         var response = this.getResponse(request);
+        var rawResponseText = responseText;
 
         // Skip any response data that we have received before (f ex when
         // response packets are repeated due to quirks in how authentication
@@ -331,21 +332,20 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         if (responseText.length > addRawBytes)
             responseText = responseText.substr(responseText.length - addRawBytes);
 
-        if (request.contentType != "application/octet-stream")
+        try
         {
-            try
-            {
-                responseText = Str.convertToUnicode(responseText, win.document.characterSet);
-            }
-            catch (err)
-            {
-                if (FBTrace.DBG_ERRORS || FBTrace.DBG_CACHE)
-                    FBTrace.sysout("tabCache.storePartialResponse EXCEPTION " +
-                        Http.safeGetRequestName(request), err);
+            // var rawResponseText = responseText;
+            responseText = Str.convertToUnicode(responseText, win.document.characterSet);
+            // if (request.contentType != "application/octet-stream")
+        }
+        catch (err)
+        {
+            if (FBTrace.DBG_ERRORS || FBTrace.DBG_CACHE)
+                FBTrace.sysout("tabCache.storePartialResponse EXCEPTION " +
+                    Http.safeGetRequestName(request), err);
 
-                // Even responses that are not converted are stored into the cache.
-                // return false;
-            }
+            // Even responses that are not converted are stored into the cache.
+            // return false;
         }
 
         // Size of each response is limited.
@@ -354,14 +354,15 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         {
             limitNotReached = false;
             responseText = responseText.substr(0, responseSizeLimit - response.size);
-            FBTrace.sysout("tabCache.storePartialResponse Max size limit reached for: " + url);
+            if (FBTrace.DBG_CACHE)
+                FBTrace.sysout("tabCache.storePartialResponse Max size limit reached for: " + url);
         }
 
         response.size += responseText.length;
         response.rawSize = newRawSize;
 
         // Store partial content into the cache.
-        this.store(url, responseText);
+        this.store(url, responseText, rawResponseText);
 
         // Return false if furhter parts of this response should be ignored.
         return limitNotReached;
@@ -410,7 +411,18 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         return this.cache[url];
     },
 
-    loadFromCache: function(url, method, file)
+    /**
+     * Returns the content of a response of a request from the FF cache.
+     *
+     * @param url {String} The URL of the request.
+     * @param method {String} The method ("GET", "POST"...)
+     * @param file {String} The file.
+     * @param getRaw {boolean} If set to true, return the raw (non-charset-converted) content 
+     *                          of the cache.
+     *
+     * @return {String} The content of the cache.
+     */
+    loadFromCache: function(url, method, file, getRaw)
     {
         // The ancestor implementation (SourceCache) uses ioService.newChannel, which
         // can result in additional request to the server (in case the response can't
@@ -468,19 +480,21 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
             if (!Firebug.TabCacheModel.shouldCacheRequest(channel))
             {
                 if (FBTrace.DBG_CACHE)
-                    FBTrace.sysout("tabCache.loadFromCache; The resource from this URL is not text: " + url);
+                    FBTrace.sysout("tabCache.loadFromCache; The resource from this URL is not "+
+                        "text: " + url);
 
                 stream.close();
                 return [Locale.$STR("message.The resource from this URL is not text") + ": " + url];
             }
 
-            responseText = Http.readFromStream(stream, charset);
+            var rawResponseText = Http.readFromStream(stream);
+            responseText = Str.convertToUnicode(rawResponseText, charset);
 
             if (FBTrace.DBG_CACHE)
                 FBTrace.sysout("tabCache.loadFromCache (response coming from FF Cache) " +
                     url, responseText);
 
-            responseText = this.store(url, responseText);
+            responseText = this.store(url, responseText, rawResponseText);
         }
         catch (err)
         {
@@ -493,7 +507,7 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
                 stream.close();
         }
 
-        return responseText;
+        return getRaw ? rawResponseText : responseText;
     },
 
     // nsIStreamListener - callbacks from channel stream listener component.

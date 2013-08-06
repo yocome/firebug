@@ -38,6 +38,7 @@ Firebug.SourceCache = function(context)
 {
     this.context = context;
     this.cache = {};
+    this.cacheRaw = {};
 };
 
 Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
@@ -86,6 +87,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
             var data = decodeURIComponent(src);
             var lines = Str.splitLines(data);
             this.cache[url] = lines;
+            this.cacheRaw[url] = src;
 
             return lines;
         }
@@ -96,6 +98,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
             var src = url.substring(Url.reJavascript.lastIndex);
             var lines = Str.splitLines(src);
             this.cache[url] = lines;
+            this.cacheRaw[url] = src;
 
             return lines;
         }
@@ -156,7 +159,34 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         return this.loadFromCache(url, method, file);
     },
 
-    store: function(url, text)
+    /**
+     * Returns the non-charset-converted cache for the given url.
+     *
+     * @param {String} url The url.
+     *
+     * @return {String} The cache content.
+     */
+    loadRaw: function(url)
+    {
+        url = this.removeAnchor(url);
+
+        // If `this.cacheRaw[url]` doesn't exist, attempt to return the content from the FF cache.
+        if (!this.cacheRaw[url])
+            return this.loadFromCache(url, null, null, true);
+
+        return this.cacheRaw[url];
+    },
+
+    /**
+     * Stores the response of a request in the Firebug cache.
+     *
+     * @param {String} url The url of the request.
+     * @param {String} text The response text of the request.
+     * @param {String} [rawText] The raw response text.
+     *
+     * @return {String} The response text split by lines.
+     */
+    store: function(url, text, rawText)
     {
         var tempURL = this.removeAnchor(url);
 
@@ -165,6 +195,8 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
                 url + ((tempURL != url) ? " -> " + tempURL : ""), text);
 
         var lines = Str.splitLines(text);
+        if (rawText)
+            this.storeRaw(url, rawText);
         return this.storeSplitLines(tempURL, lines);
     },
 
@@ -199,15 +231,25 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         }
     },
 
-    loadFromCache: function(url, method, file)
+    /**
+     * Returns the content of a response of a request from the FF cache.
+     *
+     * @param url {String} The URL of the request.
+     * @param method {String} The method ("GET", "POST"...)
+     * @param file {String} The file.
+     * @param getRaw {boolean} If set to true, return the raw (non-charset-converted) content 
+     *                          of the cache.
+     *
+     * @return {String} The content of the cache.
+     */
+    loadFromCache: function(url, method, file, getRaw)
     {
         if (FBTrace.DBG_CACHE) FBTrace.sysout("sourceCache.loadFromCache url:"+url);
 
         var doc = this.context.window.document;
+        var charset;
         if (doc)
-            var charset = doc.characterSet;
-        else
-            var charset = "UTF-8";
+            charset = doc.characterSet;
 
         var channel;
         try
@@ -304,9 +346,8 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         try
         {
             var data = Http.readFromStream(stream, charset);
-            var lines = Str.splitLines(data);
-            this.cache[url] = lines;
-            return lines;
+            var lines = this.store(url, data, data);
+            return getRaw ? data : lines;
         }
         catch (exc)
         {
@@ -331,6 +372,27 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         return this.cache[url] = lines;
     },
 
+    /**
+     * Stores raw contents in the Firebug cache. 
+     * Shouldn't be used directly (use sourceCache.store instead).
+     *
+     * @param {String} url The url of the request.
+     * @param {String} rawText The partial raw response text.
+     *
+     * @return {String} The whole cached content.
+     */
+    storeRaw: function(url, rawText)
+    {
+        url = this.removeAnchor(url);
+        if (FBTrace.DBG_CACHE)
+            FBTrace.sysout("SourceCache.storeRaw url=" + url, rawText);
+        // xxxFlorent: I don't understand why storeSplitLines doesn't append the partial responses.
+        // (apparently, the contents given here are mostly partial and have to be appended)
+        if (!this.cacheRaw[url])
+            this.cacheRaw[url] = "";
+        return this.cacheRaw[url] += rawText;
+    },
+
     invalidate: function(url)
     {
         url = this.removeAnchor(url);
@@ -339,6 +401,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
             FBTrace.sysout("sourceCache.invalidate; " + url);
 
         delete this.cache[url];
+        delete this.cacheRaw[url];
     },
 
     getLine: function(url, lineNo)
