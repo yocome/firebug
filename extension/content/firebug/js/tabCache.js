@@ -321,7 +321,12 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
 
         var url = Http.safeGetRequestName(request);
         var response = this.getResponse(request);
-        var rawResponseText = responseText;
+        var rawResponseText = null;
+
+        // Because of issue 6557, we have to store the raw cache content.
+        // See the workaround in css/cssReps.js, populateFontFamilyInfoTip() + getFontFaceCSS().
+        if (Firebug.FontViewerModel.isFont(url))
+            rawResponseText = responseText;
 
         // Skip any response data that we have received before (f ex when
         // response packets are repeated due to quirks in how authentication

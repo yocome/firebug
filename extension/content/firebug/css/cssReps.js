@@ -165,7 +165,11 @@ var CSSInfoTip = Obj.extend(InfoTip,
             fontObject: fontObject}, infoTip);
         var styleNode = node.getElementsByClassName("infoTipFontFamilyStyle").item(0);
 
-        var data = fontObject ? context.sourceCache.loadRaw(fontObject.URI) : "";
+        var data= "";
+        // Note: In case of Data URL, don't attempt to get the content from the cache.
+        if (fontObject && !Url.isDataURL(fontObject.URI))
+            data = context.sourceCache.loadRaw(fontObject.URI);
+
         styleNode.textContent = getFontFaceCSS(fontObject ? fontObject : fontName, data);
 
         if (FBTrace.DBG_INFOTIP)
@@ -216,23 +220,31 @@ function getFontFaceCSS(font, data)
 
     var fontFaceCSS = "";
     var fontName = "";
-    var fontMime = "";
-    var extension = "";
+    var urlString = "";
     if (typeof font === "object")
     {
-        if (font.URI !== "")
+        if (Url.isDataURL(font.URI))
         {
-            extension = Url.getFileExtension(font.URI);
-            fontMime = Fonts.getMimeForFont(extension);
+            urlString = "url('" + font.URI + "');";
+        }
+        else if (font.URI !== "")
+        {
+            var extension = Url.getFileExtension(font.URI);
+            var fontMime = Fonts.getMimeForFont(extension);
+
+            if (fontMime)
+            {
+                urlString = typeof data === "string" ?
+                    "url('data:" + fontMime + ";base64," + encodeBase64(data) + "');" :
+                    "url('" + font.URI + "');";
+            }
 
             if (FBTrace.DBG_INFOTIP)
                 FBTrace.sysout("getFontFaceCSS; Mime for " + font.URI + " is " + fontMime);
         }
-        if (fontMime)
+
+        if (urlString)
         {
-            var urlString = typeof data === "string" ?
-                "url('data:" + fontMime + ";base64," + encodeBase64(data) + "')" :
-                "url('" + font.URI + "')";
             if (font.rule)
             {
                 fontFaceCSS = "@font-face { font-family: infotipfont; src: " + urlString + ")}";

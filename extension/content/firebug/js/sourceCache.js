@@ -87,7 +87,8 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
             var data = decodeURIComponent(src);
             var lines = Str.splitLines(data);
             this.cache[url] = lines;
-            this.cacheRaw[url] = src;
+            // For fonts, data URLs don't need to be stored as raw.
+            // this.cacheRaw[url] = src;
 
             return lines;
         }
@@ -98,7 +99,8 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
             var src = url.substring(Url.reJavascript.lastIndex);
             var lines = Str.splitLines(src);
             this.cache[url] = lines;
-            this.cacheRaw[url] = src;
+            // Do not cache as raw (only useful when dealing with fonts).
+            // this.cacheRaw[url] = src;
 
             return lines;
         }
@@ -247,7 +249,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         if (FBTrace.DBG_CACHE) FBTrace.sysout("sourceCache.loadFromCache url:"+url);
 
         var doc = this.context.window.document;
-        var charset;
+        var charset = "UTF-8";
         if (doc)
             charset = doc.characterSet;
 
@@ -345,8 +347,9 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
 
         try
         {
-            var data = Http.readFromStream(stream, charset);
-            var lines = this.store(url, data, data);
+            var data = Http.readFromStream(stream);
+            var convertedData = Str.convertToUnicode(data, charset);
+            var lines = this.store(url, convertedData, data);
             return getRaw ? data : lines;
         }
         catch (exc)
