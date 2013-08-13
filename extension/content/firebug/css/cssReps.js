@@ -229,18 +229,9 @@ function getFontFaceCSS(font, data)
         }
         else if (font.URI !== "")
         {
-            var extension = Url.getFileExtension(font.URI);
-            var fontMime = Fonts.getMimeForFont(extension);
-
-            if (fontMime)
-            {
-                urlString = typeof data === "string" ?
-                    "url('data:" + fontMime + ";base64," + encodeBase64(data) + "');" :
-                    "url('" + font.URI + "');";
-            }
-
-            if (FBTrace.DBG_INFOTIP)
-                FBTrace.sysout("getFontFaceCSS; Mime for " + font.URI + " is " + fontMime);
+            urlString = typeof data === "string" ?
+                "url('data:;base64," + encodeBase64(data) + "');" :
+                "url('" + font.URI + "');";
         }
 
         if (urlString)

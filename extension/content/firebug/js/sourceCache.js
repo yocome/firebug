@@ -249,9 +249,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         if (FBTrace.DBG_CACHE) FBTrace.sysout("sourceCache.loadFromCache url:"+url);
 
         var doc = this.context.window.document;
-        var charset = "UTF-8";
-        if (doc)
-            charset = doc.characterSet;
+        var charset = doc ? doc.characterSet : "UTF-8";
 
         var channel;
         try

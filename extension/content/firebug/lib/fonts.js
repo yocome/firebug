@@ -11,11 +11,6 @@ function(FBTrace, Dom, Url) {
 // Constants
 
 var Fonts = {};
-var mimes = {
-    "woff": "application/font-woff",
-    "ttf": "application/x-font-ttf",
-    "otf": "application/x-otf",
-};
 
 // ********************************************************************************************* //
 // Fonts
@@ -111,28 +106,6 @@ Fonts.getFontInfo = function(context, win, identifier)
     }
 
     return false;
-};
-
-/**
- * Returns the mime for a given font name ("woff", "otf" or "ttf").
- *
- * @param {String} fontName The font name.
- *
- * @return {String} The mime.
- */
-Fonts.getMimeForFont = function(fontName)
-{
-    if (typeof fontName !== "string")
-    {
-        if (FBTrace.DBG_FONTS)
-            FBTrace.sysout("Fonts.getMimeForFont; fontName is not a string", fontName);
-        return null;
-    }
-    fontName = fontName.toLowerCase();
-    var mime = mimes[fontName];
-    if (!mime && FBTrace.DBG_FONTS)
-        FBTrace.sysout("Fonts.getMimeForFont; Unsupported font for " + fontName);
-    return mime || null;
 };
 
 // ********************************************************************************************* //
