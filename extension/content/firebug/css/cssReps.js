@@ -207,17 +207,6 @@ var CSSInfoTip = Obj.extend(InfoTip,
 */
 function getFontFaceCSS(font, data)
 {
-    function encodeBase64(string)
-    {
-        var inputStream = Xpcom.CCSV("@mozilla.org/io/string-input-stream;1",
-            "nsIStringInputStream");
-        inputStream.setData(string, string.length);
-        var stream = Xpcom.CCSV("@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream");
-        stream.setInputStream(inputStream);
-        var encoded = btoa(stream.readBytes(stream.available()));
-        return encoded;
-    }
-
     var fontFaceCSS = "";
     var fontName = "";
     var urlString = "";
@@ -230,7 +219,7 @@ function getFontFaceCSS(font, data)
         else if (font.URI !== "")
         {
             urlString = typeof data === "string" ?
-                "url('data:;base64," + encodeBase64(data) + "');" :
+                "url('data:;base64," + btoa(data) + "');" :
                 "url('" + font.URI + "');";
         }
 
