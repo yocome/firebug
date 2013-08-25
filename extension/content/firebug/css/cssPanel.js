@@ -1728,6 +1728,13 @@ Firebug.CSSStyleSheetPanel.prototype = Obj.extend(Firebug.Panel,
             if (!cssValue)
                 return false;
 
+            if (cssValue.value === "currentcolor")
+            {
+                cssValue.value = this.getCurrentColor();
+                if (cssValue.value === "")
+                    return false;
+            }
+
             if (cssValue.value == this.infoTipValue)
                 return true;
 
@@ -1772,6 +1779,11 @@ Firebug.CSSStyleSheetPanel.prototype = Obj.extend(Firebug.Panel,
 
             return false;
         }
+    },
+
+    getCurrentColor: function()
+    {
+        return "";
     },
 
     getEditor: function(target, value)
