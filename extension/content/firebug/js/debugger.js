@@ -1979,8 +1979,7 @@ Firebug.Debugger = Obj.extend(Firebug.ActivableModule,
         var url = this.getDynamicURL(context, Url.normalizeURL(caller_frame.script.fileName),
             source, "Function");
 
-        var cachedSource = context.sourceCache.store(url.href, source);
-        var lines = Str.splitLines(cachedSource);
+        var lines = context.sourceCache.store(url.href, source);
         var sourceFile = new Firebug.FunctionConstructorSourceFile(url, caller_frame.script,
             ctor_expr, lines.length);
 

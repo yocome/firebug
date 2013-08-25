@@ -321,6 +321,12 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
 
         var url = Http.safeGetRequestName(request);
         var response = this.getResponse(request);
+        var rawResponseText = null;
+
+        // Because of issue 6557, we have to store the raw cache content.
+        // See the workaround in css/cssReps.js, populateFontFamilyInfoTip() + getFontFaceCSS().
+        if (Firebug.FontViewerModel.isFont(url))
+            rawResponseText = responseText;
 
         // Skip any response data that we have received before (f ex when
         // response packets are repeated due to quirks in how authentication
@@ -330,6 +336,22 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
 
         if (responseText.length > addRawBytes)
             responseText = responseText.substr(responseText.length - addRawBytes);
+
+        try
+        {
+            // var rawResponseText = responseText;
+            responseText = Str.convertToUnicode(responseText, win.document.characterSet);
+            // if (request.contentType != "application/octet-stream")
+        }
+        catch (err)
+        {
+            if (FBTrace.DBG_ERRORS || FBTrace.DBG_CACHE)
+                FBTrace.sysout("tabCache.storePartialResponse EXCEPTION " +
+                    Http.safeGetRequestName(request), err);
+
+            // Even responses that are not converted are stored into the cache.
+            // return false;
+        }
 
         // Size of each response is limited.
         var limitNotReached = true;
@@ -345,7 +367,7 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         response.rawSize = newRawSize;
 
         // Store partial content into the cache.
-        this.store(url, responseText, true);
+        this.store(url, responseText, rawResponseText);
 
         // Return false if furhter parts of this response should be ignored.
         return limitNotReached;
@@ -432,6 +454,8 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
                 Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
                 Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
+            var charset = "UTF-8";
+
             if (!this.context.window)
             {
                 if (FBTrace.DBG_ERRORS)
@@ -440,6 +464,10 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
                         "is undefined");
                 }
             }
+
+            var doc = this.context.window ? this.context.window.document : null;
+            if (doc)
+                charset = doc.characterSet;
 
             stream = channel.open();
 
@@ -464,15 +492,14 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
                 return [Locale.$STR("message.The resource from this URL is not text") + ": " + url];
             }
 
-            responseText = Http.readFromStream(stream);
+            var rawResponseText = Http.readFromStream(stream);
+            responseText = Str.convertToUnicode(rawResponseText, charset);
 
             if (FBTrace.DBG_CACHE)
                 FBTrace.sysout("tabCache.loadFromCache (response coming from FF Cache) " +
                     url, responseText);
 
-            responseText = this.store(url, responseText, true);
-            if (!getRaw)
-                responseText = this.convertCachedData(url);
+            responseText = this.store(url, responseText, rawResponseText);
         }
         catch (err)
         {
@@ -485,7 +512,7 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
                 stream.close();
         }
 
-        return responseText;
+        return getRaw ? rawResponseText : responseText;
     },
 
     // nsIStreamListener - callbacks from channel stream listener component.
@@ -528,7 +555,8 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         var url = Http.safeGetRequestName(request);
         delete this.responses[url];
 
-        var responseText = this.loadText(url);
+        var lines = this.cache[this.removeAnchor(url)];
+        var responseText = lines ? lines.join("") : "";
 
         if (FBTrace.DBG_CACHE)
             FBTrace.sysout("tabCache.channel.stopRequest: " + Http.safeGetRequestName(request),
