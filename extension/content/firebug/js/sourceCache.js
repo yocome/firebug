@@ -198,15 +198,22 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
      */
     store: function(url, rawText, append)
     {
-        var tempURL = this.removeAnchor(url);
+        url = this.removeAnchor(url);
 
         if (FBTrace.DBG_CACHE)
             FBTrace.sysout("sourceCache for " + this.context.getName() + " store url=" +
-                url + ((tempURL != url) ? " -> " + tempURL : ""), rawText);
+                url + ((url != url) ? " -> " + url : ""), rawText);
 
-        if (!this.cacheRaw[tempURL] || !append)
-            this.cacheRaw[tempURL] = "";
-        return this.cacheRaw[tempURL] += rawText;
+        // We need to invalidate the transformed cache data because
+        // it does not fit with cacheRaw anymore.
+        delete this.cache[url];
+
+        if (!this.cacheRaw[url] || !append)
+            this.cacheRaw[url] = "";
+
+        this.cacheRaw[url] += rawText;
+
+        return this.cacheRaw[url];
     },
 
     removeAnchor: function(url)
@@ -224,7 +231,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
     /**
      * Convert into the charset of the document and split by line the raw cached data. 
      * Then stores it in a seperate cache object.
-     * Should not be used directly. Prefer using `sourceCache.load`, which will do the convertion 
+     * Should not be used directly. Prefer using `sourceCache.load`, which will do the conversion
      * lazily for you.
      *
      * @param {string} url The url of the request.
@@ -233,17 +240,17 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
      */
     convertCachedData: function(url)
     {
-        var tempURL = this.removeAnchor(url);
-        var text = this.cacheRaw[tempURL];
+        url = this.removeAnchor(url);
+        var text = this.cacheRaw[url];
         var doc = this.context.window.document;
         var charset = doc ? doc.characterSet : "UTF-8";
         if (FBTrace.DBG_CACHE)
         {
-            FBTrace.sysout("sourceCache.convertCachedData; Convert cached data for " + tempURL +
+            FBTrace.sysout("sourceCache.convertCachedData; Convert cached data for " + url +
                 " to " + charset);
         }
         var convertedText = Str.convertFromUnicode(text, charset);
-        return this.cache[tempURL] = Str.splitLines(convertedText);
+        return this.cache[url] = Str.splitLines(convertedText);
     },
 
     loadFromLocal: function(url)
