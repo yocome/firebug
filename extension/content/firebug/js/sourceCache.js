@@ -202,7 +202,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
 
         if (FBTrace.DBG_CACHE)
             FBTrace.sysout("sourceCache for " + this.context.getName() + " store url=" +
-                url + ((url != url) ? " -> " + url : ""), rawText);
+                url, rawText);
 
         // We need to invalidate the transformed cache data because
         // it does not fit with cacheRaw anymore.
