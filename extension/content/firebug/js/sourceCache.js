@@ -48,6 +48,15 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         return (this.cache[url] ? true : false);
     },
 
+    /**
+     * Returns as text the charset-converted content of the cache for the given URL.
+     *
+     * @param {string} url
+     * @param {string} [method]
+     * @param {*} [file]
+     *
+     * @returns {string} The cache content
+     */
     loadText: function(url, method, file)
     {
         var lines = this.load(url, method, file);
@@ -55,6 +64,16 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         return lines ? lines.join("") : null;
     },
 
+    /**
+     * Returns the charset-converted content of the cache for the given URL.
+     * The return value is a split by line text array.
+     *
+     * @param {string} url
+     * @param {string} [method]
+     * @param {*} [file]
+     *
+     * @returns {string} The cache content
+     */
     load: function(url, method, file)
     {
         if (FBTrace.DBG_CACHE)
@@ -216,6 +235,13 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         return this.cacheRaw[url];
     },
 
+    /**
+     * Removes the anchor of a URL
+     *
+     * @param {string} url
+     *
+     * @return {string} The url without anchor.
+     */
     removeAnchor: function(url)
     {
         if (FBTrace.DBG_ERRORS && !url)
