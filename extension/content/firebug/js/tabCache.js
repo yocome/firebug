@@ -397,16 +397,18 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
     /**
      * Returns the content of a response of a request from the FF cache.
      *
-     * @param url {String} The URL of the request.
-     * @param method {String} The method ("GET", "POST"...)
-     * @param file {String} The file.
-     * @param getRaw {boolean} If set to true, return the raw (non-charset-converted) content 
+     * @param {string} url The URL of the request.
+     * @param {string} [method] The method ("GET", "POST"...)
+     * @param {*} [file] The file.
+     * @param {object} [options] List of options:
+     *      - {boolean} getRaw: If set to true, return the raw (non-charset-converted) content
      *                          of the cache.
      *
-     * @return {String} The content of the cache.
+     * @return {string} The content of the cache.
      */
-    loadFromCache: function(url, method, file, getRaw)
+    loadFromCache: function(url, method, file, options)
     {
+        var getRaw = options && options.getRaw;
         // The ancestor implementation (SourceCache) uses ioService.newChannel, which
         // can result in additional request to the server (in case the response can't
         // be loaded from the Firefox cache) - known as the double-load problem.

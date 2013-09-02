@@ -72,7 +72,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
      * @param {string} [method]
      * @param {*} [file]
      *
-     * @returns {string} The cache content
+     * @returns {Array of strings} The cache content
      */
     load: function(url, method, file)
     {
@@ -190,9 +190,9 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
     /**
      * Returns the non-charset-converted cache for the given url.
      *
-     * @param {String} url The url.
+     * @param {string} url The url.
      *
-     * @return {String} The cache content.
+     * @return {string} The cache content.
      */
     loadRaw: function(url)
     {
@@ -208,12 +208,12 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
     /**
      * Stores the response of a request in the Firebug cache.
      *
-     * @param {String} url The url of the request.
-     * @param {String} rawText The raw response text.
+     * @param {string} url The url of the request.
+     * @param {string} rawText The raw response text.
      * @param {Boolean} append If set to true, don't invalidate the cache,
-     *                      and append the data to it.
+     *                         and append the data to it.
      *
-     * @return {String} The stored text.
+     * @return {string} The stored text.
      */
     store: function(url, rawText, append)
     {
@@ -301,16 +301,18 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
     /**
      * Returns the content of a response of a request from the FF cache.
      *
-     * @param url {String} The URL of the request.
-     * @param method {String} The method ("GET", "POST"...)
-     * @param file {String} The file.
-     * @param getRaw {boolean} If set to true, return the raw (non-charset-converted) content 
-     *                          of the cache.
+     * @param {string} url The URL of the request.
+     * @param {string} [method] The method ("GET", "POST"...)
+     * @param {*} [file] The file.
+     * @param {object} [options] List of options:
+     *      - {boolean} getRaw If set to true, return the raw (non-charset-converted) content
+     *                         of the cache.
      *
-     * @return {String} The content of the cache.
+     * @return {string} The content of the cache.
      */
-    loadFromCache: function(url, method, file, getRaw)
+    loadFromCache: function(url, method, file, options)
     {
+        var getRaw = options && options.getRaw;
         if (FBTrace.DBG_CACHE) FBTrace.sysout("sourceCache.loadFromCache url:"+url);
 
         var channel;
