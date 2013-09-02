@@ -54,13 +54,15 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
      * @param {string} url
      * @param {string} [method]
      * @param {*} [file]
+     * @param {object} [options] List of options:
+     *      - {boolean} dontLoadFromCache If set to true, don't load from the Firefox cache if no
+     *                                    content has been found.
      *
      * @returns {string} The cache content
      */
-    loadText: function(url, method, file)
+    loadText: function(url, method, file, options)
     {
-        var lines = this.load(url, method, file);
-        // xxxFlorent: isn't this wrong? shouldn't it be lines.join("\n") or similar?
+        var lines = this.load(url, method, file, options);
         return lines ? lines.join("") : null;
     },
 
@@ -74,8 +76,9 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
      *
      * @returns {Array of strings} The cache content
      */
-    load: function(url, method, file)
+    load: function(url, method, file, options)
     {
+        options = options || {};
         if (FBTrace.DBG_CACHE)
         {
             FBTrace.sysout("sourceCache.load: " + url);
@@ -184,7 +187,10 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
         // Unfortunately, the URL isn't available, so let's try to use FF cache.
         // Note that an additional network request to the server could be made
         // in this method (a double-load).
-        return this.loadFromCache(url, method, file);
+
+        if (!options.dontLoadFromCache)
+            return this.loadFromCache(url, method, file);
+        return [];
     },
 
     /**

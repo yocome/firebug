@@ -530,7 +530,7 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
         var url = Http.safeGetRequestName(request);
         delete this.responses[url];
 
-        var responseText = this.loadText(url);
+        var responseText = this.loadText(url, null, null, {"dontLoadFromCache": true});
 
         if (FBTrace.DBG_CACHE)
             FBTrace.sysout("tabCache.channel.stopRequest: " + Http.safeGetRequestName(request),
