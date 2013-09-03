@@ -762,12 +762,31 @@ NetCacheListener.prototype =
         // created at this moment (top document request).
     },
 
-    onStopRequest: function(context, request, responseText)
+    onStopRequest: function(context, request)
     {
         // Remember the response for this request.
         var file = this.netProgress.getRequestFile(request, null, true);
-        if (file && responseText)
-            file.responseText = responseText;
+        if (file)
+        {
+            var responseText;
+            Object.defineProperty(file ,"responseText", {
+                get: function()
+                {
+                    if (responseText !== undefined)
+                        return responseText;
+                    var url = Http.safeGetRequestName(request);
+
+                    if (FBTrace.DBG_CACHE)
+                        FBTrace.sysout("NetCacheListener.onStopRequest; get cache for: " + url);
+
+                    // To not penalize the performance, we don't load from the cache when the
+                    // resource is not found.
+                    responseText = context.sourceCache.loadText(url, null, null, 
+                        {"dontLoadFromCache": true});
+                    return responseText;
+                }
+            });
+        }
 
         Events.dispatch(Firebug.NetMonitor.fbListeners, "onResponseBody", [context, file]);
     }
