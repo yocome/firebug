@@ -789,7 +789,7 @@ Css.colorNameToRGB = function(value)
     if (!domUtils.colorNameToRGB)
         return value;
 
-    var reSplit = /(\(|,|\)|\s)\s*/;
+    var reSplit = /(\(|,|\)|\s)/;
     var parts = value.split(reSplit);
 
     var newValue = "";
@@ -797,16 +797,20 @@ Css.colorNameToRGB = function(value)
     {
         var part = parts[i];
         if (part === "transparent")
+        {
             newValue += "rgba(0, 0, 0, 0)";
-
-        try
-        {
-            var rgbValue = domUtils.colorNameToRGB(part);
-            newValue += "rgb(" + rgbValue.r + ", " + rgbValue.g + ", " + rgbValue.b + ")";
         }
-        catch(e)
+        else
         {
-            newValue += part;
+            if (Css.isColorKeyword(part))
+            {
+                var rgbValue = domUtils.colorNameToRGB(part);
+                newValue += "rgb(" + rgbValue.r + ", " + rgbValue.g + ", " + rgbValue.b + ")";
+            }
+            else
+            {
+                newValue += part;
+            }
         }
     }
 
