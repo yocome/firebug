@@ -729,10 +729,11 @@ Firebug.ScriptPanel.prototype = Obj.extend(Firebug.SourceBoxPanel,
         Css.obscure(this.tooltip, true);
         this.panelNode.appendChild(this.tooltip);
 
+        var prefName = Options.prefDomain + ".cache.responseLimit";
         var config = {
             message: Locale.$STR("script.SourceLimited"),
-            buttonTooltip: Locale.$STRF("LimitPrefsTitle",
-                [Options.prefDomain + ".cache.responseLimit"])
+            prefName: prefName,
+            buttonTooltip: Locale.$STRF("LimitPrefsTitle", [prefName])
         };
 
         // Render panel notification box (hidden by default).
@@ -979,12 +980,14 @@ Firebug.ScriptPanel.prototype = Obj.extend(Firebug.SourceBoxPanel,
         if (!limited)
             return;
 
-        // Show the notification box, so the user knows the scrip has
+        // Show the notification box, so the user knows the script content has
         // been limited in the cache.
         Css.removeClass(this.notificationBox, "collapsed");
-        this.selectedSourceBox.style.top = "30px";
+        var view = this.notificationBox.ownerDocument.defaultView;
+        var cs = view.getComputedStyle(this.notificationBox);
+        this.selectedSourceBox.style.top = cs.height;
     },
- 
+
     ableWatchSidePanel: function(context)
     {
         // TODO if (commandline is not active, then we should not show the new watch feature)
