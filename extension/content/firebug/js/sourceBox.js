@@ -196,7 +196,7 @@ Firebug.SourceBoxPanel = Obj.extend(SourceBoxPanelBase,
 
     },
 
-    onStopRequest: function(context, request, responseText)
+    onStopRequest: function(context, request)
     {
         if (context === this.context)
         {
