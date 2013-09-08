@@ -544,20 +544,14 @@ Firebug.TabCache.prototype = Obj.extend(Firebug.SourceCache.prototype,
             FBTrace.sysout("tabCache.channel.stopRequest: " + Http.safeGetRequestName(request));
 
         var listeners = Firebug.TabCacheModel.fbListeners.concat(this.fbListeners);
-        var needsResponseCache = false;
-        listeners = listeners.reduce(function(uniqueListeners, lsn)
+        // For backward compatibility, look for methods that expect 3 arguments.
+        // If there exist some, pre-load the cache content.
+        var needsResponseCache = listeners.some(function(lsn, index)
         {
-            // Detect when onStopContext expect 3 arguments.
-            if (!needsResponseCache)
-                needsResponseCache = lsn.onStopRequest && lsn.onStopRequest.length >= 3;
+            return lsn.onStopRequest && lsn.onStopRequest.length >= 3;
+        });
 
-            // Make sure we haven't got yet the listener in the returned array.
-            if (uniqueListeners.indexOf(lsn) === -1)
-                uniqueListeners.push(lsn);
-            return uniqueListeners;
-        }, []);
-
-        var responseText;
+        var responseText = undefined;
         if (needsResponseCache)
         {
             if (FBTrace.DBG_CACHE)
