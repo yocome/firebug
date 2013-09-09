@@ -206,7 +206,7 @@ Firebug.SourceCache.prototype = Obj.extend(new Firebug.Listener(),
 
         // If `this.cacheRaw[url]` doesn't exist, attempt to return the content from the FF cache.
         if (!this.cacheRaw[url])
-            return this.loadFromCache(url, null, null, true);
+            return this.loadFromCache(url, null, null, {"getRaw": true});
 
         return this.cacheRaw[url];
     },
