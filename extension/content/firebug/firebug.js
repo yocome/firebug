@@ -102,7 +102,7 @@ window.Firebug =
     // Custom stylesheets registered by extensions.
     stylesheets: [],
 
-    // xxxHonza: hack, all "Firebug.Options" occurences should be replaced by "Options"
+    // xxxHonza: hack, all "Firebug.Options" occurrences should be replaced by "Options"
     Options: Options,
 
     viewChrome: null,
@@ -668,7 +668,7 @@ window.Firebug =
         return CommandLineExposed.registerCommand(name, config);
     },
 
-    unregistereCommand: function(name)
+    unregisterCommand: function(name)
     {
         return CommandLineExposed.unregisterCommand(name);
     },

@@ -30,6 +30,8 @@
 .logGroupBody {
     display: none;
     margin-left: 16px;
+    margin-top: 2px;
+    margin-bottom: 2px;
     border-left: 1px solid #D7D7D7;
     border-top: 1px solid #D7D7D7;
     background: #FFFFFF;
@@ -38,6 +40,10 @@
 .logGroup > .logRow {
     background-color: transparent !important;
     font-weight: bold;
+
+    /* Override the value from panel.css, so the twisty button is
+    vertically centered with the group label row */
+    background-position: 2px calc(0.5em - 5px) !important;
 }
 
 .logGroup.opened > .logRow {
@@ -274,7 +280,7 @@
 
 /* Used for a message explaining missing stack trace for an error log */
 .errorTrace .descriptionBox {
-    background-image: url(chrome://firebug/skin/info.svg);
+    background-image: url(chrome://firebug/skin/info.png);
     background-repeat: no-repeat;
     padding: 0 0 2px 20px;
 }
@@ -316,7 +322,7 @@
 .errorColCaret {
     width: 7px;
     height: 9px;
-    background: url(chrome://firebug/skin/errorColumnIndicator.svg) no-repeat 100% 100%;
+    background: url(chrome://firebug/skin/errorColumnIndicator.png) no-repeat 100% 100%;
     display: inline-block;
     vertical-align: top;
     margin-left: 1px;
@@ -385,6 +391,11 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 .logRow-table {
+    padding: 0;
+}
+
+/* Tables should get the entire space of log content area */
+.logRow-table .logContent {
     padding: 0;
 }
 
@@ -734,7 +745,7 @@
     white-space: pre-wrap;
 }
 
-/*****************************************************************************************/
+/*************************************************************************************************/
 
 .logRow-log .objectBox-array.hasTwisty {
     padding-left: 18px;
@@ -749,7 +760,7 @@
     color: DarkGreen;
 }
 
-/*****************************************************************************************/
+/*************************************************************************************************/
 
 .logRow-spy,
 .logRow-spy .objectLink-sourceLink {
@@ -898,6 +909,7 @@
 
 /************************************************************************************************/
 /* include() command */
+
 .tableCommandLineInclude td {
     height: 17px;
 }
@@ -921,4 +933,30 @@
 .tableCommandLineInclude td:last-child {
     width: 75%;
     padding-right: 0 !important; 
+}
+
+/************************************************************************************************/
+/* getEventListeners() command */
+
+.logRow-eventListenersDetails .logGroup {
+    background: none;
+    background-color: rgb(244, 244, 244) !important;
+}
+
+.logRow-eventListenersDetails .logRow-table .logContent {
+    padding: 0;
+}
+
+.logRow-eventListenersDetails .logRow {
+    text-decoration: none !important;
+}
+
+.logRow-eventListenersDetails .eventListenersCaption:hover {
+    text-decoration: underline;
+
+/*************************************************************************************************/
+/* Description Box */
+
+.descriptionBox B {
+    font-weight: bold;
 }
