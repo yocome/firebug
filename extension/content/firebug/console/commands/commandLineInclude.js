@@ -1,6 +1,7 @@
 /* See license.txt for terms of usage */
 
 define([
+    "firebug/chrome/module",
     "firebug/chrome/reps",
     "firebug/lib/domplate",
     "firebug/lib/locale",
@@ -16,13 +17,15 @@ define([
     "firebug/chrome/tableRep",
     "firebug/console/console",
     "firebug/editor/editor",
+    "firebug/editor/inlineEditor",
 ],
-function(FirebugReps, Domplate, Locale, Dom, Win, Css, Str, Options, Menu, System, Xpcom,
-    Obj, TableRep, Console) {
-with (Domplate) {
+function(Module, FirebugReps, Domplate, Locale, Dom, Win, Css, Str, Options, Menu, System, Xpcom,
+    Obj, TableRep, Console, Editor, InlineEditor) {
 
 // ********************************************************************************************* //
 // Constants
+
+var {domplate, DomplateTag, SPAN, TR, P, LI, A, BUTTON} = Domplate;
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -167,7 +170,7 @@ var CommandLineIncludeRep = domplate(TableRep,
     startEditing: function(target)
     {
         var editor = this.getEditor(target.ownerDocument);
-        Firebug.Editor.startEditing(target, target.dataset.aliasname, editor);
+        Editor.startEditing(target, target.dataset.aliasname, editor);
     },
 
     editAliasName: function(tr)
@@ -323,7 +326,7 @@ function CommandLineIncludeObject()
 
 // ********************************************************************************************* //
 
-var CommandLineInclude = Obj.extend(Firebug.Module,
+var CommandLineInclude = Obj.extend(Module,
 {
     onSuccess: function(newAlias, context, loadingMsgRow, xhr, hasWarnings)
     {
@@ -632,10 +635,10 @@ function onCommand(context, args)
 
 function IncludeEditor(doc)
 {
-    Firebug.InlineEditor.call(this, doc);
+    InlineEditor.call(this, doc);
 }
 
-IncludeEditor.prototype = domplate(Firebug.InlineEditor.prototype,
+IncludeEditor.prototype = domplate(InlineEditor.prototype,
 {
     endEditing: function(target, value, cancel)
     {
@@ -702,4 +705,4 @@ Console.addListener(CommandLineInclude);
 return CommandLineInclude;
 
 // ********************************************************************************************* //
-}});
+});

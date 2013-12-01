@@ -1,6 +1,7 @@
 /* See license.txt for terms of usage */
 
 define([
+    "firebug/chrome/module",
     "firebug/lib/object",
     "firebug/firebug",
     "firebug/lib/domplate",
@@ -12,13 +13,12 @@ define([
     "firebug/lib/string",
     "firebug/lib/json",
     "firebug/dom/toggleBranch",
-    "firebug/lib/array",
     "firebug/lib/system",
     "firebug/dom/domPanel",
     "firebug/chrome/reps"
 ],
-function(Obj, Firebug, Domplate, Locale, Events, Css, Dom, Http, Str, Json,
-    ToggleBranch, Arr, System) {
+function(Module, Obj, Firebug, Domplate, Locale, Events, Css, Dom, Http, Str, Json,
+    ToggleBranch, System) {
 
 "use strict";
 
@@ -45,7 +45,7 @@ var contentTypes =
 // ********************************************************************************************* //
 // Model implementation
 
-Firebug.JSONViewerModel = Obj.extend(Firebug.Module,
+Firebug.JSONViewerModel = Obj.extend(Module,
 {
     dispatchName: "jsonViewer",
     contentTypes: contentTypes,
@@ -277,7 +277,7 @@ JSONTreePlate.prototype = Obj.extend(Firebug.DOMBasePanel.prototype,
         function sortName(a, b) { return a.name > b.name ? 1 : -1; }
 
         // Sort only if it isn't an array (issue 4382).
-        if (Firebug.sortJsonPreview && !Arr.isArray(object, this.context.window))
+        if (Firebug.sortJsonPreview && !Array.isArray(object, this.context.window))
             members.sort(sortName);
 
         return members;

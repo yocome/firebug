@@ -8,6 +8,8 @@ define([
 ],
 function(FBTrace, Xpcom, Arr, Str) {
 
+"use strict";
+
 // ********************************************************************************************* //
 // Constants
 
@@ -115,6 +117,7 @@ Obj.hasProperties = function(ob, nonEnumProps, ownPropsOnly)
             return false;
         }
 
+        var props;
         if (nonEnumProps)
             props = Object.getOwnPropertyNames(ob);
         else

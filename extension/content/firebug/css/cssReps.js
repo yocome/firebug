@@ -15,10 +15,10 @@ define([
 ],
 function(Obj, InfoTip, Domplate, SourceLink, Locale, Dom, Css, Str, Xpcom, Fonts, Url) {
 
-with (Domplate) {
-
 // ********************************************************************************************* //
 // Constants
+
+var {domplate, FOR, DIV, TR, P, IMG, STYLE} = Domplate;
 
 const maxWidth = 100;
 const maxHeight = 80;
@@ -254,4 +254,4 @@ function getFontFaceCSS(font, data)
 return CSSInfoTip;
 
 // ********************************************************************************************* //
-}});
+});
